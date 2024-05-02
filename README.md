@@ -18,6 +18,10 @@ Host Port:Emulated Device Port
 Note: Port 22 will SSH into the host, not the emulated device. Use port 2222 for SSH to the emulated device (assuming the device has SSH listening on port 22).
 As ports 80 and 443 are mapped to the emulated device, this host should not be used for anything except running this role.
 
+
+https://github.com/badsectorlabs/ludus_emux/assets/1490292/33bc3858-de0c-4b93-b01a-9e925834bbb7
+
+
 ## Requirements
 
 A Debian based OS.
