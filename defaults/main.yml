@@ -1,0 +1,15 @@
+---
+ludus_emux_path: /opt/emux
+ludus_emux_device: 4 # See below for the devices
+
+# DO NOT MODIFY THIS VAR
+ludus_emux_devices_map:
+  0: DV-ARM     # Damn Vulnerable ARM Router
+  1: DV-MIPSEL  # Damn Vulnerable MIPS Router (Little Endian)
+  2: DV-MIPSEB  # Damn Vulnerable MIPS Router (Big Endian)
+  3: PH0WNCTF   # R0 Port Controller - Ph0wn 2021 CTF Challenge
+  4: TRI227WF   # Trivision NC-227-WF IP Camera
+  5: AC15       # Tenda AC15 Wi-Fi Router
+  6: ARCHERC9   # Archer C9 Wi-Fi Router
+  7: DIR615C    # D-Link DIR615C Wi-Fi Router
+  8: DCS935L    # D-Link DCS-935L Camera

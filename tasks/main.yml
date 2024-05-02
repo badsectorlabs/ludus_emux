@@ -1,0 +1,52 @@
+---
+- name: Check if emux has been installed
+  ansible.builtin.stat:
+    path: "{{ ludus_emux_path }}/workspace/logs"
+  register: stat_result
+
+- name: Install if needed
+  ansible.builtin.include_tasks: install.yml
+  when: not stat_result.stat.exists
+
+- name: Get list of running containers
+  ansible.builtin.shell: "docker ps --filter 'status=running' --format '{{ '{{' }} .Names {{ '}}' }}'"
+  register: running_containers
+
+- name: Check if emux-docker is running
+  ansible.builtin.set_fact:
+    emux_docker_running: "{{ 'emux-docker' in running_containers.stdout_lines }}"
+
+- name: Get container ID for running emux-docker
+  ansible.builtin.shell: docker ps --filter 'name=emux-docker' --format '{{ '{{' }} .ID {{ '}}' }}'
+  register: container_id
+
+- name: Kill emux-docker container
+  ansible.builtin.shell: docker kill {{ container_id.stdout | trim }}
+  when: emux_docker_running
+
+- name: Clean emux-docker files
+  ansible.builtin.shell: "./clean-emux-files"
+  args:
+    chdir: "{{ ludus_emux_path }}"
+
+- name: Run emux-docker
+  ansible.builtin.shell: "./run-emux-docker-ludus /emux/run/launcher-ludus {{ ludus_emux_device }}"
+  args:
+    chdir: "{{ ludus_emux_path }}"
+  async: 10
+  poll: 0
+
+- name: Wait 10 seconds for the system to boot
+  ansible.builtin.pause:
+    seconds: 10
+
+- name: Debug - Show the command we will run to start userspace processes
+  ansible.builtin.debug:
+    msg: "docker exec emux-docker bash -c 'ssh -p 22222 root@192.168.100.2 \"cd /emux/{{ ludus_emux_devices_map[ludus_emux_device | int] }} && ./run-init \"'"
+
+- name: Start the userspace
+  ansible.builtin.shell: "docker exec emux-docker bash -c 'ssh -p 22222 root@192.168.100.2 \"cd /emux/{{ ludus_emux_devices_map[ludus_emux_device | int] }} && ./run-init \"'"
+  args:
+    chdir: "{{ ludus_emux_path }}"
+  async: 10
+  poll: 0

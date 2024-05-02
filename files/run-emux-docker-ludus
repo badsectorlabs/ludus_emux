@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# EMUX (formerly ARMX) by Saumil Shah
+# https://emux.exploitlab.net/
+
+OWNERNAME="therealsaumil"
+IMAGENAME="emux"
+TAGNAME="03-2023"
+VOL="harambe"
+PORTSTRING=""
+
+if [ "${PORTFWD}" = "" ]
+then
+   PORTFWD="23:23,80:80,443:443,8080:8080,4433:4433,9999:9999,2222:22"
+fi
+
+PORTFWD=$(echo ${PORTFWD} | tr -cd [0-9,:])
+
+IFS=',' read -ra PORTLIST <<< "${PORTFWD}"
+for PORTPAIR in "${PORTLIST[@]}"
+do
+   SPORT=$(echo ${PORTPAIR} | cut -d':' -f1)
+   PORTSTRING="${PORTSTRING} -p ${SPORT}:${SPORT}"
+done
+
+# Instead of -it we --detach
+docker run \
+    --detach \
+    ${PORTSTRING} \
+    -e PORTFWD="${PORTFWD}" \
+    --rm \
+    --cap-add=NET_ADMIN \
+    --cap-add=SYS_ADMIN \
+    --security-opt apparmor=unconfined \
+    --device=/dev/net/tun \
+    --name emux-docker \
+    --mount "type=volume,src=${VOL},dst=/emux" \
+    --mount "type=bind,src=$(pwd)/workspace,dst=/home/r0/workspace" \
+    $OWNERNAME/$IMAGENAME:$TAGNAME $*

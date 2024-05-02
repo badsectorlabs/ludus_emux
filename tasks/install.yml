@@ -1,0 +1,50 @@
+---
+- name: Install git
+  ansible.builtin.package:
+    name:
+      - git
+    state: present
+
+- name: Clone the emux repository
+  ansible.builtin.git:
+    repo: https://github.com/therealsaumil/emux.git
+    dest: "{{ ludus_emux_path }}"
+    depth: 1  # Clones only the latest commit history
+    single_branch: true
+    update: false
+
+- name: Copy the launcher-ludus script
+  ansible.builtin.copy:
+    src: launcher-ludus
+    dest: "{{ ludus_emux_path }}/files/emux/run/launcher-ludus"
+    mode: '0755'
+
+- name: Copy the run-emux-docker-ludus script
+  ansible.builtin.copy:
+    src: run-emux-docker-ludus
+    dest: "{{ ludus_emux_path }}/run-emux-docker-ludus"
+    mode: '0755'
+
+- name: Check if emux-docker image exists
+  ansible.builtin.shell: "docker images -q therealsaumil/emux"
+  register: emux_docker_image_check
+
+- name: Execute build-emux-volume script
+  ansible.builtin.command: ./build-emux-volume
+  args:
+    chdir: "{{ ludus_emux_path }}"
+  when: emux_docker_image_check.stdout | length == 0
+
+- name: Execute build-emux-docker script
+  ansible.builtin.command: ./build-emux-docker
+  args:
+    chdir: "{{ ludus_emux_path }}"
+  when: emux_docker_image_check.stdout | length == 0
+
+- name: Create the logs directory
+  ansible.builtin.file:
+    path: "{{ ludus_emux_path }}/workspace/logs"
+    owner: 1000 # r0
+    group: 1000 # r0
+    mode: '0755'
+    state: directory
