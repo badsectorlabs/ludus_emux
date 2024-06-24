@@ -36,7 +36,15 @@
   async: 10
   poll: 0
 
-- name: Wait 10 seconds for the system to boot
+- name: Wait for the emulated device to boot
+  ansible.builtin.shell: |
+    docker exec emux-docker bash -c "nc -nvw 1 192.168.100.2 22222"
+  register: ssh_check
+  until: "'SSH-2.0-dropbear' in ssh_check.stdout"
+  retries: 60
+  delay: 5
+
+- name: Wait 10 seconds for the emulated device to be ready after boot
   ansible.builtin.pause:
     seconds: 10
 
